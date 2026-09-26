@@ -9,12 +9,8 @@
             background-color: #1a1a2e;
             color: #e0e0e0;
             font-family: 'Courier New', Courier, monospace;
-            text-align: center;
-            padding: 50px;
-        }
-        h1 {
-            color: #ff7b9c;
-            text-shadow: 0 0 10px rgba(255, 123, 156, 0.5);
+            padding: 30px;
+            margin: 0;
         }
         .container {
             max-width: 600px;
@@ -24,17 +20,35 @@
             border-radius: 15px;
             border: 2px solid #0f3460;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
         }
-        textarea {
-            width: 80%;
-            height: 100px;
+        h1 {
+            color: #ff7b9c;
+            text-shadow: 0 0 10px rgba(255, 123, 156, 0.5);
+            text-align: center;
+            margin-top: 0;
+        }
+        p {
+            text-align: center;
+        }
+        input, textarea {
+            width: 100%;
             background: #0f3460;
             color: #fff;
             border: 1px solid #ff7b9c;
             border-radius: 8px;
             padding: 10px;
             font-family: inherit;
-            resize: none;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+        }
+        textarea {
+            resize: vertical;
+            height: 80px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #ff5277;
         }
         button {
             background-color: #ff7b9c;
@@ -44,10 +58,116 @@
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 15px;
+            font-family: inherit;
         }
         button:hover {
             background-color: #ff5277;
+        }
+        .center-btn {
+            text-align: center;
+        }
+        .feed-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: #0f3460;
+            color: #8a8ab0;
+            border: 1px solid #1a1a2e;
+        }
+        .tab-btn.active {
+            background: #ff7b9c;
+            color: #1a1a2e;
+        }
+        .post-card {
+            background: #0f3460;
+            border: 1px solid #1a1a2e;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .username {
+            color: #ff7b9c;
+            font-weight: bold;
+        }
+        .follow-btn {
+            background: transparent;
+            color: #ff7b9c;
+            border: 1px solid #ff7b9c;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .follow-btn.following {
+            background: #ff7b9c;
+            color: #1a1a2e;
+        }
+        .post-content {
+            font-size: 14px;
+            margin-bottom: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .post-actions {
+            display: flex;
+            gap: 15px;
+            font-size: 13px;
+            border-top: 1px solid #16213e;
+            padding-top: 8px;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: #b8b8d0;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
+        }
+        .action-btn:hover {
+            color: #ff7b9c;
+        }
+        .comments-section {
+            margin-top: 10px;
+            border-top: 1px dashed #16213e;
+            padding-top: 8px;
+            display: none;
+        }
+        .comments-section.open {
+            display: block;
+        }
+        .comment-item {
+            font-size: 12px;
+            background: rgba(0,0,0,0.2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        .comment-user {
+            color: #ff7b9c;
+            font-weight: bold;
+        }
+        .comment-input-row {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .comment-input-row input {
+            margin-bottom: 0;
+            font-size: 12px;
+            padding: 6px;
+        }
+        .comment-input-row button {
+            font-size: 12px;
+            padding: 6px 12px;
+            margin-top: 0;
         }
     </style>
 </head>
@@ -57,11 +177,163 @@
         <h1>📞 Weird Thoughts Hotline 🌙</h1>
         <p>Line is open... what's on your mind today?</p>
         
-        <br>
-        <textarea placeholder="Type your random thoughts here..."></textarea>
-        <br>
-        <button onclick="alert('Thought transmitted to the void! 🌌')">Submit Thought</button>
+        <input type="text" id="authorInput" placeholder="Your Name or Stage Name (e.g. K-☆)">
+        <textarea id="thoughtInput" placeholder="Type your random thoughts here..."></textarea>
+        
+        <div class="center-btn">
+            <button onclick="createPost()">Submit Thought</button>
+        </div>
     </div>
 
+    <div class="container">
+        <div class="feed-tabs">
+            <button class="tab-btn active" id="tabAll" onclick="switchTab('all')">🌐 Global Feed</button>
+            <button class="tab-btn" id="tabFollowing" onclick="switchTab('following')">⭐ Following</button>
+        </div>
+        <div id="feedContainer"></div>
+    </div>
+
+    <script>
+        let posts = JSON.parse(localStorage.getItem('wt_posts')) || [
+            { id: 1, author: 'K-☆', content: 'What if music notes are just secret messages sent from another dimension?', likes: 2, dislikes: 0, comments: [{ author: 'CosmicFriend', text: 'That would be so cool!' }] }
+        ];
+        let followingUsers = JSON.parse(localStorage.getItem('wt_following')) || [];
+        let currentTab = 'all';
+
+        function saveData() {
+            localStorage.setItem('wt_posts', JSON.stringify(posts));
+            localStorage.setItem('wt_following', JSON.stringify(followingUsers));
+            renderFeed();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tabAll').classList.toggle('active', tab === 'all');
+            document.getElementById('tabFollowing').classList.toggle('active', tab === 'following');
+            renderFeed();
+        }
+
+        function createPost() {
+            const author = document.getElementById('authorInput').value.trim() || 'Anonymous';
+            const content = document.getElementById('thoughtInput').value.trim();
+
+            if (!content) {
+                alert('Please type a thought first!');
+                return;
+            }
+
+            const newPost = {
+                id: Date.now(),
+                author: author,
+                content: content,
+                likes: 0,
+                dislikes: 0,
+                comments: []
+            };
+
+            posts.unshift(newPost);
+            document.getElementById('thoughtInput').value = '';
+            saveData();
+        }
+
+        function toggleFollow(username) {
+            if (followingUsers.includes(username)) {
+                followingUsers = followingUsers.filter(u => u !== username);
+            } else {
+                followingUsers.push(username);
+            }
+            saveData();
+        }
+
+        function handleLike(id) {
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                post.likes++;
+                saveData();
+            }
+        }
+
+        function handleDislike(id) {
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                post.dislikes++;
+                saveData();
+            }
+        }
+
+        function toggleComments(id) {
+            const section = document.getElementById(`comments-${id}`);
+            section.classList.toggle('open');
+        }
+
+        function addComment(id) {
+            const inputField = document.getElementById(`comment-input-${id}`);
+            const authorField = document.getElementById('authorInput');
+            const commentText = inputField.value.trim();
+            const author = authorField.value.trim() || 'Anonymous';
+
+            if (!commentText) return;
+
+            const post = posts.find(p => p.id === id);
+            if (post) {
+                post.comments.push({ author: author, text: commentText });
+                inputField.value = '';
+                saveData();
+            }
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('feedContainer');
+            container.innerHTML = '';
+
+            let filteredPosts = posts;
+            if (currentTab === 'following') {
+                filteredPosts = posts.filter(p => followingUsers.includes(p.author));
+            }
+
+            if (filteredPosts.length === 0) {
+                container.innerHTML = `<p style="color: #8a8ab0;">No thoughts here yet! Try posting or following someone.</p>`;
+                return;
+            }
+
+            filteredPosts.forEach(post => {
+                const isFollowing = followingUsers.includes(post.author);
+                const postEl = document.createElement('div');
+                postEl.className = 'post-card';
+                
+                let commentsHTML = '';
+                post.comments.forEach(c => {
+                    commentsHTML += `<div class="comment-item"><span class="comment-user">${escapeHtml(c.author)}:</span> ${escapeHtml(c.text)}</div>`;
+                });
+
+                postEl.innerHTML = `
+                    <div class="post-header">
+                        <span class="username">${escapeHtml(post.author)}</span>
+                        ${post.author !== 'Anonymous' ? `<button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${escapeHtml(post.author)}')">${isFollowing ? '★ Following' : '+ Follow'}</button>` : ''}
+                    </div>
+                    <div class="post-content">${escapeHtml(post.content)}</div>
+                    <div class="post-actions">
+                        <button class="action-btn" onclick="handleLike(${post.id})">👍 Like (${post.likes})</button>
+                        <button class="action-btn" onclick="handleDislike(${post.id})">👎 Dislike (${post.dislikes})</button>
+                        <button class="action-btn" onclick="toggleComments(${post.id})">💬 Reply (${post.comments.length})</button>
+                    </div>
+                    <div class="comments-section" id="comments-${post.id}">
+                        <div>${commentsHTML}</div>
+                        <div class="comment-input-row">
+                            <input type="text" id="comment-input-${post.id}" placeholder="Write a reply...">
+                            <button onclick="addComment(${post.id})">Send</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(postEl);
+            });
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        renderFeed();
+    </script>
 </body>
-</html>
+</html> 
