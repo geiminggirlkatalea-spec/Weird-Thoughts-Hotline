@@ -4,349 +4,276 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weird Thoughts Hotline ☎️✨</title>
-    <!-- Import Firebase SDKs -->
+    
+    <!-- Firebase App & Firestore SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <style>
+        :root {
+            --bg-color: #12121a;
+            --panel-bg: #1a1a2e;
+            --card-bg: #16213e;
+            --accent: #ff7b9c;
+            --accent-hover: #ff5277;
+            --text-main: #e0e0e0;
+            --text-muted: #8a8ab0;
+            --border: #0f3460;
+        }
+
         body {
-            background-color: #1a1a2e;
-            color: #e0e0e0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             font-family: 'Courier New', Courier, monospace;
-            padding: 30px;
             margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
         .container {
+            width: 100%;
             max-width: 600px;
-            margin: 0 auto;
-            background: #16213e;
-            padding: 30px;
+            background: var(--panel-bg);
+            padding: 25px;
             border-radius: 15px;
-            border: 2px solid #0f3460;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            margin-bottom: 30px;
+            border: 2px solid var(--border);
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+            margin-bottom: 25px;
+            box-sizing: border-box;
         }
+
         h1 {
-            color: #ff7b9c;
-            text-shadow: 0 0 10px rgba(255, 123, 156, 0.5);
+            color: var(--accent);
+            text-shadow: 0 0 12px rgba(255, 123, 156, 0.5);
             text-align: center;
             margin-top: 0;
+            font-size: 24px;
         }
-        p {
+
+        p.subtitle {
             text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 20px;
         }
+
         input, textarea {
             width: 100%;
-            background: #0f3460;
+            background: var(--card-bg);
             color: #fff;
-            border: 1px solid #ff7b9c;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 10px;
+            padding: 12px;
             font-family: inherit;
             box-sizing: border-box;
             margin-bottom: 12px;
+            font-size: 14px;
         }
+
         textarea {
             resize: vertical;
-            height: 80px;
+            height: 90px;
         }
+
         input:focus, textarea:focus {
             outline: none;
-            border-color: #ff5277;
+            border-color: var(--accent);
         }
+
         button {
-            background-color: #ff7b9c;
-            color: #1a1a2e;
+            background-color: var(--accent);
+            color: var(--bg-color);
             border: none;
             padding: 10px 20px;
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
             font-family: inherit;
+            transition: background 0.2s, transform 0.1s;
+            width: 100%;
+            font-size: 15px;
         }
+
         button:hover {
-            background-color: #ff5277;
+            background-color: var(--accent-hover);
         }
-        .center-btn {
-            text-align: center;
+
+        button:active {
+            transform: scale(0.98);
         }
-        .feed-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: #0f3460;
-            color: #8a8ab0;
-            border: 1px solid #1a1a2e;
-        }
-        .tab-btn.active {
-            background: #ff7b9c;
-            color: #1a1a2e;
-        }
+
         .post-card {
-            background: #0f3460;
-            border: 1px solid #1a1a2e;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
+            animation: fadeIn 0.4s ease-in-out;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .post-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
+            font-size: 13px;
         }
+
         .username {
-            color: #ff7b9c;
+            color: var(--accent);
             font-weight: bold;
         }
-        .follow-btn {
-            background: transparent;
-            color: #ff7b9c;
-            border: 1px solid #ff7b9c;
+
+        .timestamp {
+            color: var(--text-muted);
             font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 4px;
         }
-        .follow-btn.following {
-            background: #ff7b9c;
-            color: #1a1a2e;
-        }
+
         .post-content {
             font-size: 14px;
-            margin-bottom: 12px;
-            white-space: pre-wrap;
+            line-height: 1.4;
             word-break: break-word;
+            white-space: pre-wrap;
         }
-        .post-actions {
-            display: flex;
-            gap: 15px;
-            font-size: 13px;
-            border-top: 1px solid #16213e;
-            padding-top: 8px;
+
+        .feed-title {
+            color: var(--accent);
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
         }
-        .action-btn {
-            background: none;
-            border: none;
-            color: #b8b8d0;
-            cursor: pointer;
-            padding: 0;
-            font-family: inherit;
-        }
-        .action-btn:hover {
-            color: #ff7b9c;
-        }
-        .comments-section {
-            margin-top: 10px;
-            border-top: 1px dashed #16213e;
-            padding-top: 8px;
-            display: none;
-        }
-        .comments-section.open {
-            display: block;
-        }
-        .comment-item {
-            font-size: 12px;
-            background: rgba(0,0,0,0.2);
-            padding: 6px 10px;
-            border-radius: 6px;
-            margin-bottom: 6px;
-        }
-        .comment-user {
-            color: #ff7b9c;
-            font-weight: bold;
-        }
-        .comment-input-row {
-            display: flex;
-            gap: 5px;
-            margin-top: 8px;
-        }
-        .comment-input-row input {
-            margin-bottom: 0;
-            font-size: 12px;
-            padding: 6px;
-        }
-        .comment-input-row button {
-            font-size: 12px;
-            padding: 6px 12px;
-            margin-top: 0;
+
+        .status-msg {
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 20px;
         }
     </style>
 </head>
 <body>
 
+    <!-- Submission Box -->
     <div class="container">
         <h1>📞 Weird Thoughts Hotline 🌙</h1>
-        <p>Line is open... broadcast your thoughts to the world!</p>
+        <p class="subtitle">The line is open... broadcast your weirdest thoughts to everyone on Earth.</p>
         
-        <input type="text" id="authorInput" placeholder="Your Name or Stage Name (e.g. K-☆)">
-        <textarea id="thoughtInput" placeholder="What's your weird thought right now?"></textarea>
+        <input type="text" id="authorInput" placeholder="Your Name / Codename (e.g. K-☆)" maxlength="30">
+        <textarea id="thoughtInput" placeholder="Type your random thought here... (e.g., Do fish know they're wet?)" maxlength="300"></textarea>
         
-        <div class="center-btn">
-            <button onclick="createPost()">Submit Thought</button>
-        </div>
+        <button onclick="createPost()">Transmit Thought 🌌</button>
     </div>
 
+    <!-- Public Live Feed -->
     <div class="container">
-        <div class="feed-tabs">
-            <button class="tab-btn active" id="tabAll" onclick="switchTab('all')">🌐 Global Feed</button>
-            <button class="tab-btn" id="tabFollowing" onclick="switchTab('following')">⭐ Following</button>
+        <div class="feed-title">📡 Global Live Feed</div>
+        <div id="feedContainer">
+            <div class="status-msg">Connecting to the void...</div>
         </div>
-        <div id="feedContainer"></div>
     </div>
 
     <script>
-        // TODO: PASTE YOUR FIREBASE CONFIGURATION HERE FROM STEP 1
+        // ----------------------------------------------------
+        // FIREBASE CONFIGURATION (REPLACE THE TEXT BELOW WITH YOUR OWN)
+        // ----------------------------------------------------
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "PASTE_YOUR_FIREBASE_API_KEY_HERE",
+            authDomain: "PASTE_YOUR_FIREBASE_AUTH_DOMAIN_HERE",
+            projectId: "PASTE_YOUR_FIREBASE_PROJECT_ID_HERE",
+            storageBucket: "PASTE_YOUR_FIREBASE_STORAGE_BUCKET_HERE",
+            messagingSenderId: "PASTE_YOUR_FIREBASE_MESSAGING_SENDER_ID_HERE",
+            appId: "PASTE_YOUR_FIREBASE_APP_ID_HERE"
         };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let posts = [];
-        let followingUsers = JSON.parse(localStorage.getItem('wt_following')) || [];
-        let currentTab = 'all';
+        // Real-time listener: pulls thoughts from the cloud database instantly for everyone
+        db.collection("thoughts")
+          .orderBy("createdAt", "desc")
+          .onSnapshot((snapshot) => {
+              const feedContainer = document.getElementById('feedContainer');
+              feedContainer.innerHTML = '';
 
-        // Listen for real-time updates from everyone globally!
-        db.collection("posts").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
-            posts = [];
-            snapshot.forEach((doc) => {
-                posts.push({ id: doc.id, ...doc.data() });
-            });
-            renderFeed();
-        });
+              if (snapshot.empty) {
+                  feedContainer.innerHTML = `<div class="status-msg">No weird thoughts transmitted yet. Be the first!</div>`;
+                  return;
+              }
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('tabAll').classList.toggle('active', tab === 'all');
-            document.getElementById('tabFollowing').classList.toggle('active', tab === 'following');
-            renderFeed();
-        }
+              snapshot.forEach((doc) => {
+                  const data = doc.data();
+                  
+                  const postEl = document.createElement('div');
+                  postEl.className = 'post-card';
+                  
+                  let timeString = 'Just now';
+                  if (data.createdAt) {
+                      timeString = new Date(data.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  }
 
+                  postEl.innerHTML = `
+                      <div class="post-header">
+                          <span class="username">${escapeHtml(data.author)}</span>
+                          <span class="timestamp">${timeString}</span>
+                      </div>
+                      <div class="post-content">${escapeHtml(data.content)}</div>
+                  `;
+                  
+                  feedContainer.appendChild(postEl);
+              });
+          }, (error) => {
+              console.error("Error loading thoughts:", error);
+              document.getElementById('feedContainer').innerHTML = `<div class="status-msg" style="color: #ff5277;">Error connecting to database. Make sure you replaced the Firebase configuration keys!</div>`;
+          });
+
+        // Function to handle submitting a thought with validation
         async function createPost() {
-            const author = document.getElementById('authorInput').value.trim() || 'Anonymous';
-            const content = document.getElementById('thoughtInput').value.trim();
+            const authorField = document.getElementById('authorInput');
+            const thoughtField = document.getElementById('thoughtInput');
+
+            const author = authorField.value.trim() || 'Anonymous';
+            const content = thoughtField.value.trim();
 
             if (!content) {
-                alert('Please type a thought first!');
+                alert('Please type a thought before transmitting!');
+                return;
+            }
+
+            if (content.length > 300) {
+                alert('Your thought is too long! Keep it under 300 characters.');
                 return;
             }
 
             try {
-                await db.collection("posts").add({
+                await db.collection("thoughts").add({
                     author: author,
                     content: content,
-                    likes: 0,
-                    dislikes: 0,
-                    comments: [],
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                document.getElementById('thoughtInput').value = '';
+
+                thoughtField.value = '';
             } catch (error) {
-                console.error("Error adding post: ", error);
-                alert("Error sending thought. Check your Firebase settings!");
+                console.error("Error adding document: ", error);
+                alert("Failed to send thought. Make sure your Firebase keys are correctly entered!");
             }
         }
 
-        function toggleFollow(username) {
-            if (followingUsers.includes(username)) {
-                followingUsers = followingUsers.filter(u => u !== username);
-            } else {
-                followingUsers.push(username);
-            }
-            localStorage.setItem('wt_following', JSON.stringify(followingUsers));
-            renderFeed();
-        }
-
-        async function handleLike(id, currentLikes) {
-            const postRef = db.collection("posts").doc(id);
-            await postRef.update({ likes: currentLikes + 1 });
-        }
-
-        async function handleDislike(id, currentDislikes) {
-            const postRef = db.collection("posts").doc(id);
-            await postRef.update({ dislikes: currentDislikes + 1 });
-        }
-
-        function toggleComments(id) {
-            const section = document.getElementById(`comments-${id}`);
-            section.classList.toggle('open');
-        }
-
-        async function addComment(id, existingComments) {
-            const inputField = document.getElementById(`comment-input-${id}`);
-            const authorField = document.getElementById('authorInput');
-            const commentText = inputField.value.trim();
-            const author = authorField.value.trim() || 'Anonymous';
-
-            if (!commentText) return;
-
-            const updatedComments = [...existingComments, { author: author, text: commentText }];
-            const postRef = db.collection("posts").doc(id);
-            
-            await postRef.update({ comments: updatedComments });
-            inputField.value = '';
-        }
-
-        function renderFeed() {
-            const container = document.getElementById('feedContainer');
-            container.innerHTML = '';
-
-            let filteredPosts = posts;
-            if (currentTab === 'following') {
-                filteredPosts = posts.filter(p => followingUsers.includes(p.author));
-            }
-
-            if (filteredPosts.length === 0) {
-                container.innerHTML = `<p style="color: #8a8ab0;">No thoughts here yet! Try posting or following someone.</p>`;
-                return;
-            }
-
-            filteredPosts.forEach(post => {
-                const isFollowing = followingUsers.includes(post.author);
-                const postEl = document.createElement('div');
-                postEl.className = 'post-card';
-                
-                let commentsHTML = '';
-                const comments = post.comments || [];
-                comments.forEach(c => {
-                    commentsHTML += `<div class="comment-item"><span class="comment-user">${escapeHtml(c.author)}:</span> ${escapeHtml(c.text)}</div>`;
-                });
-
-                postEl.innerHTML = `
-                    <div class="post-header">
-                        <span class="username">${escapeHtml(post.author)}</span>
-                        ${post.author !== 'Anonymous' ? `<button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${escapeHtml(post.author)}')">${isFollowing ? '★ Following' : '+ Follow'}</button>` : ''}
-                    </div>
-                    <div class="post-content">${escapeHtml(post.content)}</div>
-                    <div class="post-actions">
-                        <button class="action-btn" onclick="handleLike('${post.id}', ${post.likes || 0})">👍 Like (${post.likes || 0})</button>
-                        <button class="action-btn" onclick="handleDislike('${post.id}', ${post.dislikes || 0})">👎 Dislike (${post.dislikes || 0})</button>
-                        <button class="action-btn" onclick="toggleComments('${post.id}')">💬 Reply (${comments.length})</button>
-                    </div>
-                    <div class="comments-section" id="comments-${post.id}">
-                        <div>${commentsHTML}</div>
-                        <div class="comment-input-row">
-                            <input type="text" id="comment-input-${post.id}" placeholder="Write a reply...">
-                            <button onclick="addComment('${post.id}', ${JSON.stringify(comments).replace(/"/g, '&quot;')})">Send</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(postEl);
-            });
-        }
-
+        // Security helper to prevent HTML script injection
         function escapeHtml(text) {
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            return text.replace(/&/g, "&amp;")
+                       .replace(/</g, "&lt;")
+                       .replace(/>/g, "&gt;")
+                       .replace(/"/g, "&quot;")
+                       .replace(/'/g, "&#039;");
         }
     </script>
 </body>
