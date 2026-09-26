@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sq">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weird Thoughts Hotline ☎️✨</title>
     
-    <!-- Firebase App & Firestore SDKs -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -161,28 +161,28 @@
 </head>
 <body>
 
-    <!-- Submission Box -->
+    <!-- Kutia e dërgimit -->
     <div class="container">
         <h1>📞 Weird Thoughts Hotline 🌙</h1>
-        <p class="subtitle">The line is open... broadcast your weirdest thoughts to everyone on Earth.</p>
+        <p class="subtitle">Linja është e hapur... shpërndaj mendimet e tua për të gjithë botën.</p>
         
-        <input type="text" id="authorInput" placeholder="Your Name / Codename (e.g. K-☆)" maxlength="30">
-        <textarea id="thoughtInput" placeholder="Type your random thought here... (e.g., Do fish know they're wet?)" maxlength="300"></textarea>
+        <input type="text" id="authorInput" placeholder="Emri ose Pseudonimi yt (p.sh. K-☆)" maxlength="30">
+        <textarea id="thoughtInput" placeholder="Shkruaj një mendim të çuditshëm këtu..." maxlength="300"></textarea>
         
-        <button onclick="createPost()">Transmit Thought 🌌</button>
+        <button onclick="createPost()">Transmeto Mendimin 🌌</button>
     </div>
 
-    <!-- Public Live Feed -->
+    <!-- Feed-i Publik -->
     <div class="container">
-        <div class="feed-title">📡 Global Live Feed</div>
+        <div class="feed-title">📡 Sfondi Global i Komenteve</div>
         <div id="feedContainer">
-            <div class="status-msg">Connecting to the void...</div>
+            <div class="status-msg">Po lidhemi me bazën e të dhënave...</div>
         </div>
     </div>
 
     <script>
         // ----------------------------------------------------
-        // FIREBASE CONFIGURATION (REPLACE THE TEXT BELOW WITH YOUR OWN)
+        // VENDOS KËTU ÇELËSAT E FIREBASE
         // ----------------------------------------------------
         const firebaseConfig = {
             apiKey: "PASTE_YOUR_FIREBASE_API_KEY_HERE",
@@ -193,11 +193,11 @@
             appId: "PASTE_YOUR_FIREBASE_APP_ID_HERE"
         };
 
-        // Initialize Firebase
+        // Inicializimi i Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Real-time listener: pulls thoughts from the cloud database instantly for everyone
+        // Dëgjuesi në kohë reale: shfaq komentet/mendimet e çdo njeriu menjëherë për të gjithë
         db.collection("thoughts")
           .orderBy("createdAt", "desc")
           .onSnapshot((snapshot) => {
@@ -205,7 +205,7 @@
               feedContainer.innerHTML = '';
 
               if (snapshot.empty) {
-                  feedContainer.innerHTML = `<div class="status-msg">No weird thoughts transmitted yet. Be the first!</div>`;
+                  feedContainer.innerHTML = `<div class="status-msg">Ende nuk ka asnjë mendim. Bëhu i pari që shkruan!</div>`;
                   return;
               }
 
@@ -215,7 +215,7 @@
                   const postEl = document.createElement('div');
                   postEl.className = 'post-card';
                   
-                  let timeString = 'Just now';
+                  let timeString = 'Sapo tani';
                   if (data.createdAt) {
                       timeString = new Date(data.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                   }
@@ -231,25 +231,25 @@
                   feedContainer.appendChild(postEl);
               });
           }, (error) => {
-              console.error("Error loading thoughts:", error);
-              document.getElementById('feedContainer').innerHTML = `<div class="status-msg" style="color: #ff5277;">Error connecting to database. Make sure you replaced the Firebase configuration keys!</div>`;
+              console.error("Gabim në ngarkim:", error);
+              document.getElementById('feedContainer').innerHTML = `<div class="status-msg" style="color: #ff5277;">Gabim në lidhje me databazën. Kontrollo çelësat e Firebase!</div>`;
           });
 
-        // Function to handle submitting a thought with validation
+        // Funksioni për të dërguar një mendim të ri
         async function createPost() {
             const authorField = document.getElementById('authorInput');
             const thoughtField = document.getElementById('thoughtInput');
 
-            const author = authorField.value.trim() || 'Anonymous';
+            const author = authorField.value.trim() || 'Anonim';
             const content = thoughtField.value.trim();
 
             if (!content) {
-                alert('Please type a thought before transmitting!');
+                alert('Të lutem shkruaj një mendim para se ta transmetosh!');
                 return;
             }
 
             if (content.length > 300) {
-                alert('Your thought is too long! Keep it under 300 characters.');
+                alert('Mendimi yt është shumë i gjatë! Mbaje nën 300 karaktere.');
                 return;
             }
 
@@ -262,12 +262,12 @@
 
                 thoughtField.value = '';
             } catch (error) {
-                console.error("Error adding document: ", error);
-                alert("Failed to send thought. Make sure your Firebase keys are correctly entered!");
+                console.error("Gabim në dërgim: ", error);
+                alert("Dërgimi dështoi. Sigurohu që ke vendosur saktë çelësat e Firebase!");
             }
         }
 
-        // Security helper to prevent HTML script injection
+        // Funksion sigurie për të parandaluar keqpërdorimet
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;")
                        .replace(/</g, "&lt;")
