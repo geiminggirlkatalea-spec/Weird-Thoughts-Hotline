@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weird Thoughts Hotline ☎️✨</title>
+    <!-- Import Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
         body {
             background-color: #1a1a2e;
@@ -175,10 +179,10 @@
 
     <div class="container">
         <h1>📞 Weird Thoughts Hotline 🌙</h1>
-        <p>Line is open... what's on your mind today?</p>
+        <p>Line is open... broadcast your thoughts to the world!</p>
         
         <input type="text" id="authorInput" placeholder="Your Name or Stage Name (e.g. K-☆)">
-        <textarea id="thoughtInput" placeholder="Type your random thoughts here..."></textarea>
+        <textarea id="thoughtInput" placeholder="What's your weird thought right now?"></textarea>
         
         <div class="center-btn">
             <button onclick="createPost()">Submit Thought</button>
@@ -194,17 +198,32 @@
     </div>
 
     <script>
-        let posts = JSON.parse(localStorage.getItem('wt_posts')) || [
-            { id: 1, author: 'K-☆', content: 'What if music notes are just secret messages sent from another dimension?', likes: 2, dislikes: 0, comments: [{ author: 'CosmicFriend', text: 'That would be so cool!' }] }
-        ];
+        // TODO: PASTE YOUR FIREBASE CONFIGURATION HERE FROM STEP 1
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let posts = [];
         let followingUsers = JSON.parse(localStorage.getItem('wt_following')) || [];
         let currentTab = 'all';
 
-        function saveData() {
-            localStorage.setItem('wt_posts', JSON.stringify(posts));
-            localStorage.setItem('wt_following', JSON.stringify(followingUsers));
+        // Listen for real-time updates from everyone globally!
+        db.collection("posts").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+            posts = [];
+            snapshot.forEach((doc) => {
+                posts.push({ id: doc.id, ...doc.data() });
+            });
             renderFeed();
-        }
+        });
 
         function switchTab(tab) {
             currentTab = tab;
@@ -213,7 +232,7 @@
             renderFeed();
         }
 
-        function createPost() {
+        async function createPost() {
             const author = document.getElementById('authorInput').value.trim() || 'Anonymous';
             const content = document.getElementById('thoughtInput').value.trim();
 
@@ -222,18 +241,20 @@
                 return;
             }
 
-            const newPost = {
-                id: Date.now(),
-                author: author,
-                content: content,
-                likes: 0,
-                dislikes: 0,
-                comments: []
-            };
-
-            posts.unshift(newPost);
-            document.getElementById('thoughtInput').value = '';
-            saveData();
+            try {
+                await db.collection("posts").add({
+                    author: author,
+                    content: content,
+                    likes: 0,
+                    dislikes: 0,
+                    comments: [],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('thoughtInput').value = '';
+            } catch (error) {
+                console.error("Error adding post: ", error);
+                alert("Error sending thought. Check your Firebase settings!");
+            }
         }
 
         function toggleFollow(username) {
@@ -242,23 +263,18 @@
             } else {
                 followingUsers.push(username);
             }
-            saveData();
+            localStorage.setItem('wt_following', JSON.stringify(followingUsers));
+            renderFeed();
         }
 
-        function handleLike(id) {
-            const post = posts.find(p => p.id === id);
-            if (post) {
-                post.likes++;
-                saveData();
-            }
+        async function handleLike(id, currentLikes) {
+            const postRef = db.collection("posts").doc(id);
+            await postRef.update({ likes: currentLikes + 1 });
         }
 
-        function handleDislike(id) {
-            const post = posts.find(p => p.id === id);
-            if (post) {
-                post.dislikes++;
-                saveData();
-            }
+        async function handleDislike(id, currentDislikes) {
+            const postRef = db.collection("posts").doc(id);
+            await postRef.update({ dislikes: currentDislikes + 1 });
         }
 
         function toggleComments(id) {
@@ -266,7 +282,7 @@
             section.classList.toggle('open');
         }
 
-        function addComment(id) {
+        async function addComment(id, existingComments) {
             const inputField = document.getElementById(`comment-input-${id}`);
             const authorField = document.getElementById('authorInput');
             const commentText = inputField.value.trim();
@@ -274,12 +290,11 @@
 
             if (!commentText) return;
 
-            const post = posts.find(p => p.id === id);
-            if (post) {
-                post.comments.push({ author: author, text: commentText });
-                inputField.value = '';
-                saveData();
-            }
+            const updatedComments = [...existingComments, { author: author, text: commentText }];
+            const postRef = db.collection("posts").doc(id);
+            
+            await postRef.update({ comments: updatedComments });
+            inputField.value = '';
         }
 
         function renderFeed() {
@@ -302,7 +317,8 @@
                 postEl.className = 'post-card';
                 
                 let commentsHTML = '';
-                post.comments.forEach(c => {
+                const comments = post.comments || [];
+                comments.forEach(c => {
                     commentsHTML += `<div class="comment-item"><span class="comment-user">${escapeHtml(c.author)}:</span> ${escapeHtml(c.text)}</div>`;
                 });
 
@@ -313,15 +329,15 @@
                     </div>
                     <div class="post-content">${escapeHtml(post.content)}</div>
                     <div class="post-actions">
-                        <button class="action-btn" onclick="handleLike(${post.id})">👍 Like (${post.likes})</button>
-                        <button class="action-btn" onclick="handleDislike(${post.id})">👎 Dislike (${post.dislikes})</button>
-                        <button class="action-btn" onclick="toggleComments(${post.id})">💬 Reply (${post.comments.length})</button>
+                        <button class="action-btn" onclick="handleLike('${post.id}', ${post.likes || 0})">👍 Like (${post.likes || 0})</button>
+                        <button class="action-btn" onclick="handleDislike('${post.id}', ${post.dislikes || 0})">👎 Dislike (${post.dislikes || 0})</button>
+                        <button class="action-btn" onclick="toggleComments('${post.id}')">💬 Reply (${comments.length})</button>
                     </div>
                     <div class="comments-section" id="comments-${post.id}">
                         <div>${commentsHTML}</div>
                         <div class="comment-input-row">
                             <input type="text" id="comment-input-${post.id}" placeholder="Write a reply...">
-                            <button onclick="addComment(${post.id})">Send</button>
+                            <button onclick="addComment('${post.id}', ${JSON.stringify(comments).replace(/"/g, '&quot;')})">Send</button>
                         </div>
                     </div>
                 `;
@@ -332,15 +348,6 @@
         function escapeHtml(text) {
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
-
-        renderFeed();
     </script>
 </body>
-</html> const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
-};
+</html>
